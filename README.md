@@ -40,7 +40,8 @@ The circuit:
 - Switch button attached to pin 3 (enable/disable animations)
 - Red LEDs attached to pins 4-10 (see code comments for details)
 
-Pinout:  
+Pinout:
+
       *(A)        *(B)
 
       *(C)  *(D)  *(E)
@@ -90,8 +91,8 @@ See 'Rescources' sub-folder for more pictures of the proyect.
 v1.0 (2022.02.23) - Initial release.  
 v1.1 (2022.02.24) - Adding ON/OFF animations switch. Fixed bug with random secuences (randomSeed).  
 v1.2 (2022.02.27) - Re-arrange LEDs pin-out to simplify PCB.  
-v1.3 (2022.03.10) - Improvement of animations code with ROM tables.  
-   lines count 622 -> 342, compiled total size 6031 -> 4867 bytes (20% reduction)
+v1.3 (2022.03.10) - Animations improvement using ROM tables: lines count 622->342, compiled total size 6031->4867 bytes (20% reduction).
+
 &nbsp;
 
 This source code is licensed under GPL v3.0  
