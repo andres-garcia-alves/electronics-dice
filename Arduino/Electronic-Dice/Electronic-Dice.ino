@@ -8,7 +8,8 @@
   Version 1.1, 2022.02.24 - Adding ON/OFF animations switch.
                             Fixed bug with random secuences (randomSeed).
   Version 1.2, 2022.02.27 - Re-arrange LEDs pin-out to simplify PCB.
-  Version 1.3, 2022.03.10 - Animations improvement using ROM tables: lines count 622->342, compiled total size 6031->4867 bytes (20% reduction).
+  Version 1.3, 2022.03.09 - Animations improvement using ROM tables: lines count 622->342, compiled total size 6031->4867 bytes (20% reduction).
+  Version 1.4, 2022.03.10 - Dice number improvement using masked bits: lines count 342->296, compiled total size 4867->4777 bytes (2% reduction).
 
   This source code is licensed under GPL v3.0  
 
@@ -32,24 +33,6 @@
 */
 
 #include <LowPower.h>
-
-
-// function declarations
-void buttonPressed();
-void displayDiceNumber(byte diceNumber);
-void clearDice();
-void animateDiceNumber(byte diceNumber);
-
-void displayAnimation(byte animNumber);
-void displayStaticAnimation(byte animNumber);
-void displayDynamicAnimation1();
-void displayDynamicAnimation2();
-void displayDynamicAnimation3();
-void displayDynamicAnimationLed(byte ledNumber, boolean ledStatus);
-
-// interrupt handler declarations
-void btnInterruptHandler();
-void switchInterruptHandler();
 
 // const & variables
 const int PIN_BTN = 2;
@@ -146,55 +129,12 @@ void displayDiceNumber(byte diceNumber) {
 
   clearDice();
 
-  switch (diceNumber) {
-    case 1:
-      digitalWrite(PIN_LED_D, HIGH);
-      break;
-    case 2:
-      digitalWrite(PIN_LED_A, HIGH);
-      digitalWrite(PIN_LED_G, HIGH);
-      break;
-    case 3:
-      digitalWrite(PIN_LED_A, HIGH);
-      digitalWrite(PIN_LED_D, HIGH);
-      digitalWrite(PIN_LED_G, HIGH);
-      break;
-    case 4:
-      digitalWrite(PIN_LED_A, HIGH);
-      digitalWrite(PIN_LED_B, HIGH);
-      digitalWrite(PIN_LED_F, HIGH);
-      digitalWrite(PIN_LED_G, HIGH);
-      break;
-    case 5:
-      digitalWrite(PIN_LED_A, HIGH);
-      digitalWrite(PIN_LED_B, HIGH);
-      digitalWrite(PIN_LED_D, HIGH);
-      digitalWrite(PIN_LED_F, HIGH);
-      digitalWrite(PIN_LED_G, HIGH);
-      break;
-    case 6:
-      digitalWrite(PIN_LED_A, HIGH);
-      digitalWrite(PIN_LED_B, HIGH);
-      digitalWrite(PIN_LED_C, HIGH);
-      digitalWrite(PIN_LED_E, HIGH);
-      digitalWrite(PIN_LED_F, HIGH);
-      digitalWrite(PIN_LED_G, HIGH);
-      break;
-  }
+  // dice numbers: 0 (invalid), 1, 2, 3, 4, 5, 6
+  byte numbersData[7] = { 0b00000000, 0b00001000, 0b01000001, 0b01001001, 0b01100011, 0b01101011, 0b01110111 };
+
+  // set individuals leds ON/OFF by mask (format: 0XXXXXXX)
+  displayLedsByMaskedBits(numbersData[diceNumber], HIGH);
 }
-
-
-void clearDice() {
-  
-  digitalWrite(PIN_LED_A, LOW);
-  digitalWrite(PIN_LED_B, LOW);
-  digitalWrite(PIN_LED_C, LOW);
-  digitalWrite(PIN_LED_D, LOW);
-  digitalWrite(PIN_LED_E, LOW);
-  digitalWrite(PIN_LED_F, LOW);
-  digitalWrite(PIN_LED_G, LOW);
-}
-
 
 void animateDiceNumber(byte diceNumber) {
   
@@ -243,15 +183,9 @@ void displayStaticAnimation(byte animNumber) {
   for (int i = 0; i < animLoops; i++) {
     for (int j = 3; j < animLenght +3; j++) {
 
+      // set individuals leds ON/OFF by mask
       animStepData = animationsData[animNumber -1][j];
-
-      if (animStepData & 1) { digitalWrite(PIN_LED_A, HIGH); }
-      if (animStepData & 2) { digitalWrite(PIN_LED_B, HIGH); }
-      if (animStepData & 4) { digitalWrite(PIN_LED_C, HIGH); }
-      if (animStepData & 8) { digitalWrite(PIN_LED_D, HIGH); }
-      if (animStepData & 16) { digitalWrite(PIN_LED_E, HIGH); }
-      if (animStepData & 32) { digitalWrite(PIN_LED_F, HIGH); }
-      if (animStepData & 64) { digitalWrite(PIN_LED_G, HIGH); }
+      displayLedsByMaskedBits(animStepData, HIGH);
   
       delay(animSpeed == 0 ? ANIM_HALF_DELAY : ANIM_DELAY);
       clearDice();    
@@ -265,7 +199,7 @@ void displayDynamicAnimation1() {
   for (int i = 0; i < 36; i++) {
     
     byte ledNumber = (byte)random(1, 8); // range 1-7
-    displayDynamicAnimationLed(ledNumber, HIGH);
+    displayLedByNumber(ledNumber, HIGH);
     
     delay(ANIM_HALF_DELAY);
     clearDice();
@@ -285,7 +219,7 @@ void displayDynamicAnimation2() {
       } while (empty[idx] == false);
       empty[idx] = false;
 
-      displayDynamicAnimationLed(idx+1, HIGH);
+      displayLedByNumber(idx+1, HIGH);
       delay(ANIM_DELAY);
     }
 
@@ -306,7 +240,7 @@ void displayDynamicAnimation3() {
     } while (empty[idx] == false);
     empty[idx] = false;
 
-    displayDynamicAnimationLed(idx+1, HIGH);
+    displayLedByNumber(idx+1, HIGH);
     delay(ANIM_DELAY);
   }
 
@@ -319,7 +253,7 @@ void displayDynamicAnimation3() {
     } while (empty[idx] == true);
     empty[idx] = true;
 
-    displayDynamicAnimationLed(idx+1, LOW);
+    displayLedByNumber(idx+1, LOW);
     delay(ANIM_DELAY);
   }
 
@@ -327,8 +261,16 @@ void displayDynamicAnimation3() {
   clearDice();
 }
 
-// set an individual led to ON/OFF status
-void displayDynamicAnimationLed(byte ledNumber, boolean ledStatus) {
+
+// set all leds OFF
+void clearDice() {
+
+  // set individuals leds ON/OFF by mask (format: 0XXXXXXX)
+  displayLedsByMaskedBits(0b11111111, LOW);
+}
+
+// set an individual led ON/OFF by number
+void displayLedByNumber(byte ledNumber, boolean ledStatus) {
   
   switch (ledNumber) {
     case 1: digitalWrite(PIN_LED_A, ledStatus); break;
@@ -339,4 +281,16 @@ void displayDynamicAnimationLed(byte ledNumber, boolean ledStatus) {
     case 6: digitalWrite(PIN_LED_F, ledStatus); break;
     case 7: digitalWrite(PIN_LED_G, ledStatus); break;
   }
+}
+
+// set individuals leds ON/OFF by mask (format: 0XXXXXXX)
+void displayLedsByMaskedBits(byte maskedBits, boolean ledStatus) {
+  
+    if (maskedBits & 1) { digitalWrite(PIN_LED_A, ledStatus); }
+    if (maskedBits & 2) { digitalWrite(PIN_LED_B, ledStatus); }
+    if (maskedBits & 4) { digitalWrite(PIN_LED_C, ledStatus); }
+    if (maskedBits & 8) { digitalWrite(PIN_LED_D, ledStatus); }
+    if (maskedBits & 16) { digitalWrite(PIN_LED_E, ledStatus); }
+    if (maskedBits & 32) { digitalWrite(PIN_LED_F, ledStatus); }
+    if (maskedBits & 64) { digitalWrite(PIN_LED_G, ledStatus); }
 }
