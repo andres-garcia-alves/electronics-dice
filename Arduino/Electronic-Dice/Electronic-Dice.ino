@@ -1,5 +1,5 @@
 /*
-  Electronic Dice v1.0
+  Electronic Dice v1.3
 
   Created by: Andres Garcia Alves <andres.garcia.alves@gmail.com>
   Microcontroller: Arduino Nano (ATMega328 @16Mhz)
@@ -8,6 +8,8 @@
   Version 1.1, 2022.02.24 - Adding ON/OFF animations switch.
                             Fixed bug with random secuences (randomSeed).
   Version 1.2, 2022.02.27 - Re-arrange LEDs pin-out to simplify PCB.
+  Version 1.3, 2022.03.10 - Improvement of animations code with ROM tables.
+                            lines count 622 -> 342, compiled total size 6031 -> 4867 bytes (20% reduction)
 
   This source code is licensed under GPL v3.0  
 
@@ -34,24 +36,16 @@
 
 // function declarations
 void buttonPressed();
-void displayDiceNumber(long diceNumber);
+void displayDiceNumber(byte diceNumber);
 void clearDice();
-void animateDiceNumber(long diceNumber);
+void animateDiceNumber(byte diceNumber);
 
-void displayAnimation(long animNumber);
-void displayAnimation01();
-void displayAnimation02();
-void displayAnimation03();
-void displayAnimation04();
-void displayAnimation05();
-void displayAnimation06();
-void displayAnimation07();
-void displayAnimation08();
-void displayAnimation09();
-void displayAnimation10();
-void displayAnimation11();
-void displayAnimation12();
-void displayAnimation13();
+void displayAnimation(byte animNumber);
+void displayStaticAnimation(byte animNumber);
+void displayDynamicAnimation1();
+void displayDynamicAnimation2();
+void displayDynamicAnimation3();
+void displayDynamicAnimationLed(byte ledNumber, boolean ledStatus);
 
 // interrupt handler declarations
 void btnInterruptHandler();
@@ -72,11 +66,15 @@ const int PIN_LED_G = 4;
 const int DEBOUNCE_DELAY = 50;
 const int DICE_DELAY = 5000;
 
+const int ANIM_COUNT = 13;
+const int ANIM_SPEED_IDX = 0;
+const int ANIM_LOOPS_IDX = 1;
+const int ANIM_LENGHT_IDX = 2;
+
 const int ANIM_DELAY = 200;
 const int ANIM_HALF_DELAY = 100;
 const int ANIM_DOUBLE_DELAY = 400;
 const int ANIM_ENDING_DELAY = 1000;
-
 
 // interrupt handlers
 void btnInterruptHandler() { }
@@ -121,17 +119,14 @@ void loop() {
 
 void checkButtonPressed() {
 
-  // disable external interrupts on pin 2
-  // detachInterrupt(digitalPinToInterrupt(PIN_BTN));
-
-  delay(DEBOUNCE_DELAY); // de-bounce delay
- 
+  // de-bounce delay
+  delay(DEBOUNCE_DELAY);
   bool btnStatus = digitalRead(PIN_BTN);
   if (btnStatus != LOW) { return; }
 
   // throw the dice
-  long diceNumber = random(1, 7); // 1 to 6
-  long animNumber = random(1, 14); // 1 to 13
+  byte diceNumber = (byte)random(1, 7); // range 1-6
+  byte animNumber = (byte)random(1, ANIM_COUNT+1); // range 1-ANIM_COUNT
 
   // animation
   bool switchAnim = digitalRead(PIN_SWITCH);
@@ -147,7 +142,7 @@ void checkButtonPressed() {
 }
 
 
-void displayDiceNumber(long diceNumber) {
+void displayDiceNumber(byte diceNumber) {
 
   clearDice();
 
@@ -201,7 +196,7 @@ void clearDice() {
 }
 
 
-void animateDiceNumber(long diceNumber) {
+void animateDiceNumber(byte diceNumber) {
   
   for (int i = 0; i < 6; i++) {
     displayDiceNumber(diceNumber);
@@ -213,362 +208,84 @@ void animateDiceNumber(long diceNumber) {
 
 
 // display an animation by number
-void displayAnimation(long animNumber) {
+void displayAnimation(byte animNumber) {
   
   switch (animNumber) {
-    case 1: displayAnimation01(); break;
-    case 2: displayAnimation02(); break;
-    case 3: displayAnimation03(); break;
-    case 4: displayAnimation04(); break;
-    case 5: displayAnimation05(); break;
-    case 6: displayAnimation06(); break;
-    case 7: displayAnimation07(); break;
-    case 8: displayAnimation08(); break;
-    case 9: displayAnimation09(); break;
-    case 10: displayAnimation10(); break;
-    case 11: displayAnimation11(); break;
-    case 12: displayAnimation12(); break;
-    case 13: displayAnimation13(); break;
+    case 1 ... 10: displayStaticAnimation(animNumber); break;
+    case 11: displayDynamicAnimation1(); break;
+    case 12: displayDynamicAnimation2(); break;
+    case 13: displayDynamicAnimation3(); break;
   }
 }
 
+// anims #01-10: static animations
+void displayStaticAnimation(byte animNumber) {
 
-// anim #1: loop row-by-row from upper to bottom (18 ticks)
-void displayAnimation01() {
+  // row format: [speed], [loops], [length], [bitmask step #1], [bitmask step #2], [bitmask step #n], [0]
+  byte animationsData[10][16] = {
+    { 1,  8,  2,  99,   8,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0 }, // #01: corner leds followed by the central one (16 ticks)
+    { 1,  8,  2, 119,   8,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0 }, // #02: perimeter leds followed by the central one (16 ticks)
+    { 1,  6,  3,   3,  28,  96,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0 }, // #03: loop row-by-row from upper to bottom (18 ticks)
+    { 1,  4,  4,   3,  28,  96,  28,   0,   0,   0,   0,   0,   0,   0,   0,   0 }, // #04: bounce row-by-row from upper to bottom (16 ticks)
+    { 0,  6,  6,   1,   2,  16,  64,  32,   4,   0,   0,   0,   0,   0,   0,   0 }, // #05: go one-by-one over leds perimeter (18 ticks)
+    { 0,  5,  7,   1,   2,   4,   8,  16,  32,  64,   0,   0,   0,   0,   0,   0 }, // #06: a dot going in horizontal lines (17.5 ticks)
+    { 0,  6,  6,   1,   4,  32,   2,  16,  64,   0,   0,   0,   0,   0,   0,   0 }, // #07: a dot going in vertical lines (18 ticks)
+    { 0,  6,  6,   1,  16,  32,  64,   4,   2,   0,   0,   0,   0,   0,   0,   0 }, // #08: a dot going in zig-zag (18 ticks)
+    { 1,  2,  8,   3,  82,  28,  37,  96,  82,  28,  37,   0,   0,   0,   0,   0 }, // #09: loop of horizontal and vertical lines (16 ticks)
+    { 0,  3, 13,   1,   4,  32,   2,  16,  64,   1,   2,   4,   8,  16,  32,  64 }  // #10: a dot going in vertical lines followed by horizontal ones (19.5 ticks)
+  };
   
-  for (int i = 0; i < 6; i++) {
-    digitalWrite(PIN_LED_A, HIGH);
-    digitalWrite(PIN_LED_B, HIGH);
-    delay(ANIM_DELAY);
-    clearDice();
-    digitalWrite(PIN_LED_C, HIGH);
-    digitalWrite(PIN_LED_D, HIGH);
-    digitalWrite(PIN_LED_E, HIGH);
-    delay(ANIM_DELAY);
-    clearDice();
-    digitalWrite(PIN_LED_F, HIGH);
-    digitalWrite(PIN_LED_G, HIGH);
-    delay(ANIM_DELAY);
-    clearDice();
+  byte animStepData;
+  byte animSpeed = animationsData[animNumber -1][ANIM_SPEED_IDX]; // idx 00
+  byte animLoops = animationsData[animNumber -1][ANIM_LOOPS_IDX]; // idx 01
+  byte animLenght = animationsData[animNumber -1][ANIM_LENGHT_IDX]; // idx 02
+
+  for (int i = 0; i < animLoops; i++) {
+    for (int j = 3; j < animLenght +3; j++) {
+
+      animStepData = animationsData[animNumber -1][j];
+
+      if (animStepData & 1) { digitalWrite(PIN_LED_A, HIGH); }
+      if (animStepData & 2) { digitalWrite(PIN_LED_B, HIGH); }
+      if (animStepData & 4) { digitalWrite(PIN_LED_C, HIGH); }
+      if (animStepData & 8) { digitalWrite(PIN_LED_D, HIGH); }
+      if (animStepData & 16) { digitalWrite(PIN_LED_E, HIGH); }
+      if (animStepData & 32) { digitalWrite(PIN_LED_F, HIGH); }
+      if (animStepData & 64) { digitalWrite(PIN_LED_G, HIGH); }
+  
+      delay(animSpeed == 0 ? ANIM_HALF_DELAY : ANIM_DELAY);
+      clearDice();    
+    }
   }
 }
-
-
-// anim #2: bounce row-by-row from upper to bottom (16 ticks)
-void displayAnimation02() {
-  
-  for (int i = 0; i < 4; i++) {
-    digitalWrite(PIN_LED_A, HIGH);
-    digitalWrite(PIN_LED_B, HIGH);
-    delay(ANIM_DELAY);
-    clearDice();
-    digitalWrite(PIN_LED_C, HIGH);
-    digitalWrite(PIN_LED_D, HIGH);
-    digitalWrite(PIN_LED_E, HIGH);
-    delay(ANIM_DELAY);
-    clearDice();
-    digitalWrite(PIN_LED_F, HIGH);
-    digitalWrite(PIN_LED_G, HIGH);
-    delay(ANIM_DELAY);
-    clearDice();
-    digitalWrite(PIN_LED_C, HIGH);
-    digitalWrite(PIN_LED_D, HIGH);
-    digitalWrite(PIN_LED_E, HIGH);
-    delay(ANIM_DELAY);
-    clearDice();
-  }
-}
-
-
-// anim #3: go one-by-one over leds perimeter (18 ticks)
-void displayAnimation03() {
-  
-  for (int i = 0; i < 6; i++) {
-    digitalWrite(PIN_LED_A, HIGH);
-    delay(ANIM_HALF_DELAY);
-    clearDice();
-    digitalWrite(PIN_LED_B, HIGH);
-    delay(ANIM_HALF_DELAY);
-    clearDice();
-    digitalWrite(PIN_LED_E, HIGH);
-    delay(ANIM_HALF_DELAY);
-    clearDice();
-    digitalWrite(PIN_LED_G, HIGH);
-    delay(ANIM_HALF_DELAY);
-    clearDice();
-    digitalWrite(PIN_LED_F, HIGH);
-    delay(ANIM_HALF_DELAY);
-    clearDice();
-    digitalWrite(PIN_LED_C, HIGH);
-    delay(ANIM_HALF_DELAY);
-    clearDice();  }
-}
-
-
-// anim #4: go one-by-one over leds in zig-zag (17.5 ticks)
-void displayAnimation04() {
-  
-  for (int i = 0; i < 5; i++) {
-    digitalWrite(PIN_LED_A, HIGH);
-    delay(ANIM_HALF_DELAY);
-    clearDice();
-    digitalWrite(PIN_LED_B, HIGH);
-    delay(ANIM_HALF_DELAY);
-    clearDice();
-    digitalWrite(PIN_LED_C, HIGH);
-    delay(ANIM_HALF_DELAY);
-    clearDice();
-    digitalWrite(PIN_LED_D, HIGH);
-    delay(ANIM_HALF_DELAY);
-    clearDice();
-    digitalWrite(PIN_LED_E, HIGH);
-    delay(ANIM_HALF_DELAY);
-    clearDice();
-    digitalWrite(PIN_LED_F, HIGH);
-    delay(ANIM_HALF_DELAY);
-    clearDice();
-    digitalWrite(PIN_LED_G, HIGH);
-    delay(ANIM_HALF_DELAY);
-    clearDice();  }
-}
-
-
-// anim #5: perimeter leds followed by the central one (16 ticks)
-void displayAnimation05() {
-  
-  for (int i = 0; i < 8; i++) {
-    digitalWrite(PIN_LED_A, HIGH);
-    digitalWrite(PIN_LED_B, HIGH);
-    digitalWrite(PIN_LED_C, HIGH);
-    digitalWrite(PIN_LED_E, HIGH);
-    digitalWrite(PIN_LED_F, HIGH);
-    digitalWrite(PIN_LED_G, HIGH);
-    delay(ANIM_DELAY);
-    clearDice();
-    digitalWrite(PIN_LED_D, HIGH);
-    delay(ANIM_DELAY);
-    clearDice();
-  }
-}
-
-
-// anim #6: corner leds followed by the central one (16 ticks)
-void displayAnimation06() {
-  
-  for (int i = 0; i < 8; i++) {
-    digitalWrite(PIN_LED_A, HIGH);
-    digitalWrite(PIN_LED_B, HIGH);
-    digitalWrite(PIN_LED_F, HIGH);
-    digitalWrite(PIN_LED_G, HIGH);
-    delay(ANIM_DELAY);
-    clearDice();
-    digitalWrite(PIN_LED_D, HIGH);
-    delay(ANIM_DELAY);
-    clearDice();
-  }
-}
-
-
-// anim #7: a dot going in vertical lines (18 ticks)
-void displayAnimation07() {
-  
-  for (int i = 0; i < 6; i++) {
-    digitalWrite(PIN_LED_A, HIGH);
-    delay(ANIM_HALF_DELAY);
-    clearDice();
-    digitalWrite(PIN_LED_C, HIGH);
-    delay(ANIM_HALF_DELAY);
-    clearDice();
-    digitalWrite(PIN_LED_F, HIGH);
-    delay(ANIM_HALF_DELAY);
-    clearDice();
-    digitalWrite(PIN_LED_B, HIGH);
-    delay(ANIM_HALF_DELAY);
-    clearDice();
-    digitalWrite(PIN_LED_E, HIGH);
-    delay(ANIM_HALF_DELAY);
-    clearDice();
-    digitalWrite(PIN_LED_G, HIGH);
-    delay(ANIM_HALF_DELAY);
-    clearDice();
-  }
-}
-
-
-// anim #8: a dot going in horizontal lines (17.5 ticks)
-void displayAnimation08() {
-  
-  for (int i = 0; i < 5; i++) {
-    digitalWrite(PIN_LED_A, HIGH);
-    delay(ANIM_HALF_DELAY);
-    clearDice();
-    digitalWrite(PIN_LED_B, HIGH);
-    delay(ANIM_HALF_DELAY);
-    clearDice();
-    digitalWrite(PIN_LED_C, HIGH);
-    delay(ANIM_HALF_DELAY);
-    clearDice();
-    digitalWrite(PIN_LED_D, HIGH);
-    delay(ANIM_HALF_DELAY);
-    clearDice();
-    digitalWrite(PIN_LED_E, HIGH);
-    delay(ANIM_HALF_DELAY);
-    clearDice();
-    digitalWrite(PIN_LED_F, HIGH);
-    delay(ANIM_HALF_DELAY);
-    clearDice();
-    digitalWrite(PIN_LED_G, HIGH);
-    delay(ANIM_HALF_DELAY);
-    clearDice();
-  }
-}
-
-
-// anim #9: a dot going in vertical lines followed by horizontal ones (19.5 ticks)
-void displayAnimation09() {
-  for (int i = 0; i < 3; i++) {
-    // vertical move code
-    digitalWrite(PIN_LED_A, HIGH);
-    delay(ANIM_HALF_DELAY);
-    clearDice();
-    digitalWrite(PIN_LED_C, HIGH);
-    delay(ANIM_HALF_DELAY);
-    clearDice();
-    digitalWrite(PIN_LED_F, HIGH);
-    delay(ANIM_HALF_DELAY);
-    clearDice();
-    digitalWrite(PIN_LED_B, HIGH);
-    delay(ANIM_HALF_DELAY);
-    clearDice();
-    digitalWrite(PIN_LED_E, HIGH);
-    delay(ANIM_HALF_DELAY);
-    clearDice();
-    digitalWrite(PIN_LED_G, HIGH);
-    delay(ANIM_HALF_DELAY);
-    clearDice();
-    // horizontal move code
-    digitalWrite(PIN_LED_A, HIGH);
-    delay(ANIM_HALF_DELAY);
-    clearDice();
-    digitalWrite(PIN_LED_B, HIGH);
-    delay(ANIM_HALF_DELAY);
-    clearDice();
-    digitalWrite(PIN_LED_C, HIGH);
-    delay(ANIM_HALF_DELAY);
-    clearDice();
-    digitalWrite(PIN_LED_D, HIGH);
-    delay(ANIM_HALF_DELAY);
-    clearDice();
-    digitalWrite(PIN_LED_E, HIGH);
-    delay(ANIM_HALF_DELAY);
-    clearDice();
-    digitalWrite(PIN_LED_F, HIGH);
-    delay(ANIM_HALF_DELAY);
-    clearDice();
-    digitalWrite(PIN_LED_G, HIGH);
-    delay(ANIM_HALF_DELAY);
-    clearDice();
-  }
-}
-
-
-// anim #10: loop of horizontal and vertical lines (16 ticks)
-void displayAnimation10() {
-  
-  for (int i = 0; i < 2; i++) {
-    // horizontal upper line
-    digitalWrite(PIN_LED_A, HIGH);
-    digitalWrite(PIN_LED_B, HIGH);
-    delay(ANIM_DELAY);
-    clearDice();
-    // vertical right line
-    digitalWrite(PIN_LED_B, HIGH);
-    digitalWrite(PIN_LED_E, HIGH);
-    digitalWrite(PIN_LED_G, HIGH);
-    delay(ANIM_DELAY);
-    clearDice();
-    // horizontal middle line
-    digitalWrite(PIN_LED_C, HIGH);
-    digitalWrite(PIN_LED_D, HIGH);
-    digitalWrite(PIN_LED_E, HIGH);
-    delay(ANIM_DELAY);
-    clearDice();
-    // vertical left line
-    digitalWrite(PIN_LED_A, HIGH);
-    digitalWrite(PIN_LED_C, HIGH);
-    digitalWrite(PIN_LED_F, HIGH);
-    delay(ANIM_DELAY);
-    clearDice();
-    // horizontal bottom line
-    digitalWrite(PIN_LED_F, HIGH);
-    digitalWrite(PIN_LED_G, HIGH);
-    delay(ANIM_DELAY);
-    clearDice();
-    // vertical right line
-    digitalWrite(PIN_LED_B, HIGH);
-    digitalWrite(PIN_LED_E, HIGH);
-    digitalWrite(PIN_LED_G, HIGH);
-    delay(ANIM_DELAY);
-    clearDice();
-    // horizontal middle line
-    digitalWrite(PIN_LED_C, HIGH);
-    digitalWrite(PIN_LED_D, HIGH);
-    digitalWrite(PIN_LED_E, HIGH);
-    delay(ANIM_DELAY);
-    clearDice();
-    // vertical left line
-    digitalWrite(PIN_LED_A, HIGH);
-    digitalWrite(PIN_LED_C, HIGH);
-    digitalWrite(PIN_LED_F, HIGH);
-    delay(ANIM_DELAY);
-    clearDice();
-  }
-}
-
 
 // anim #11: random dots (18 ticks)
-void displayAnimation11() {
+void displayDynamicAnimation1() {
 
   for (int i = 0; i < 36; i++) {
-    long ledNumber = random(1, 8); // 1 to 7
-
-    switch (ledNumber) {
-      case 1: digitalWrite(PIN_LED_A, HIGH); break;
-      case 2: digitalWrite(PIN_LED_B, HIGH); break;
-      case 3: digitalWrite(PIN_LED_C, HIGH); break;
-      case 4: digitalWrite(PIN_LED_D, HIGH); break;
-      case 5: digitalWrite(PIN_LED_E, HIGH); break;
-      case 6: digitalWrite(PIN_LED_F, HIGH); break;
-      case 7: digitalWrite(PIN_LED_G, HIGH); break;
-    }
+    
+    byte ledNumber = (byte)random(1, 8); // range 1-7
+    displayDynamicAnimationLed(ledNumber, HIGH);
+    
     delay(ANIM_HALF_DELAY);
     clearDice();
   }
 }
 
-
-// anim #12: random dot fill (9 x 2 -> 18 ticks)
-void displayAnimation12() {
-  int idx;
+// anim #12: random dots fill (9 x 2 -> 18 ticks)
+void displayDynamicAnimation2() {
+  byte idx;
 
   for (int i = 0; i < 2; i++) {
     bool empty[7] = {true, true, true, true, true, true, true};
 
     for (int j = 0; j < 7; j++) {
       do {
-        idx = (int)random(0, 7); // 0 to 6
+        idx = (byte)random(0, 7); // range 0-6
       } while (empty[idx] == false);
       empty[idx] = false;
 
-      switch (idx) {
-        case 0: digitalWrite(PIN_LED_A, HIGH); break;
-        case 1: digitalWrite(PIN_LED_B, HIGH); break;
-        case 2: digitalWrite(PIN_LED_C, HIGH); break;
-        case 3: digitalWrite(PIN_LED_D, HIGH); break;
-        case 4: digitalWrite(PIN_LED_E, HIGH); break;
-        case 5: digitalWrite(PIN_LED_F, HIGH); break;
-        case 6: digitalWrite(PIN_LED_G, HIGH); break;
-      }
+      displayDynamicAnimationLed(idx+1, HIGH);
       delay(ANIM_DELAY);
     }
 
@@ -577,28 +294,19 @@ void displayAnimation12() {
   }
 }
 
-
-// anim #13: random dot fill & ramdom dot empty (9 + 9 -> 18 ticks)
-void displayAnimation13() {
-  int idx;
+// anim #13: random dot fill & random dot empty (9 + 9 -> 18 ticks)
+void displayDynamicAnimation3() {
+  byte idx;
   bool empty[7] = {true, true, true, true, true, true, true};
 
   // random fill
   for (int i = 0; i < 7; i++) {
     do {
-      idx = (int)random(0, 7); // 0 to 6
+      idx = (byte)random(0, 7); // range 0-6
     } while (empty[idx] == false);
     empty[idx] = false;
 
-    switch (idx) {
-      case 0: digitalWrite(PIN_LED_A, HIGH); break;
-      case 1: digitalWrite(PIN_LED_B, HIGH); break;
-      case 2: digitalWrite(PIN_LED_C, HIGH); break;
-      case 3: digitalWrite(PIN_LED_D, HIGH); break;
-      case 4: digitalWrite(PIN_LED_E, HIGH); break;
-      case 5: digitalWrite(PIN_LED_F, HIGH); break;
-      case 6: digitalWrite(PIN_LED_G, HIGH); break;
-    }
+    displayDynamicAnimationLed(idx+1, HIGH);
     delay(ANIM_DELAY);
   }
 
@@ -607,22 +315,28 @@ void displayAnimation13() {
   // random empty
   for (int j = 0; j < 7; j++) {
     do {
-      idx = (int)random(0, 7); // 0 to 6
+      idx = (byte)random(0, 7); // range 0-6
     } while (empty[idx] == true);
     empty[idx] = true;
 
-    switch (idx) {
-      case 0: digitalWrite(PIN_LED_A, LOW); break;
-      case 1: digitalWrite(PIN_LED_B, LOW); break;
-      case 2: digitalWrite(PIN_LED_C, LOW); break;
-      case 3: digitalWrite(PIN_LED_D, LOW); break;
-      case 4: digitalWrite(PIN_LED_E, LOW); break;
-      case 5: digitalWrite(PIN_LED_F, LOW); break;
-      case 6: digitalWrite(PIN_LED_G, LOW); break;
-    }
+    displayDynamicAnimationLed(idx+1, LOW);
     delay(ANIM_DELAY);
   }
 
   delay(ANIM_DOUBLE_DELAY);
   clearDice();
+}
+
+// set an individual led to ON/OFF status
+void displayDynamicAnimationLed(byte ledNumber, boolean ledStatus) {
+  
+  switch (ledNumber) {
+    case 1: digitalWrite(PIN_LED_A, ledStatus); break;
+    case 2: digitalWrite(PIN_LED_B, ledStatus); break;
+    case 3: digitalWrite(PIN_LED_C, ledStatus); break;
+    case 4: digitalWrite(PIN_LED_D, ledStatus); break;
+    case 5: digitalWrite(PIN_LED_E, ledStatus); break;
+    case 6: digitalWrite(PIN_LED_F, ledStatus); break;
+    case 7: digitalWrite(PIN_LED_G, ledStatus); break;
+  }
 }

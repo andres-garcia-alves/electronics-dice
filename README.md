@@ -1,6 +1,21 @@
 # Electronic-Dice
 
-Arduino &amp; PIC16F84A code for an electronic dice (with animations). 
+Arduino &amp; PIC16F84A source code & building details for an electronic dice (with animations). 
+
+Available animations:
+- #01: corner leds followed by the central one
+- #02: perimeter leds followed by the central one
+- #03: loop row-by-row from upper to bottom
+- #04: bounce row-by-row from upper to bottom
+- #05: go one-by-one over leds perimeter
+- #06: a dot going in horizontal lines
+- #07: a dot going in vertical lines
+- #08: a dot going in zig-zag
+- #09: loop of horizontal and vertical lines
+- #10: a dot going in vertical lines followed by horizontal ones
+- #11: random dots
+- #12: random dots fill
+- #13: random dot fill & random dot empty
 
 &nbsp;
 
@@ -25,7 +40,7 @@ The circuit:
 - Switch button attached to pin 3 (enable/disable animations)
 - Red LEDs attached to pins 4-10 (see code comments for details)
 
-Pinout:
+Pinout:  
       *(A)        *(B)
 
       *(C)  *(D)  *(E)
@@ -74,8 +89,9 @@ See 'Rescources' sub-folder for more pictures of the proyect.
 
 v1.0 (2022.02.23) - Initial release.  
 v1.1 (2022.02.24) - Adding ON/OFF animations switch. Fixed bug with random secuences (randomSeed).  
-v1.2 (2022.02.27) - Re-arrange LEDs pin-out to simplify PCB.
-
+v1.2 (2022.02.27) - Re-arrange LEDs pin-out to simplify PCB.  
+v1.3 (2022.03.10) - Improvement of animations code with ROM tables.  
+   lines count 622 -> 342, compiled total size 6031 -> 4867 bytes (20% reduction)
 &nbsp;
 
 This source code is licensed under GPL v3.0  
