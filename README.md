@@ -91,7 +91,7 @@ See 'Rescources' sub-folder for more pictures of the proyect.
 v1.0 (2022.02.23) - Initial release.  
 v1.1 (2022.02.24) - Adding ON/OFF animations switch. Fixed bug with random secuences (randomSeed).  
 v1.2 (2022.02.27) - Re-arrange LEDs pin-out to simplify PCB.  
-v1.3 (2022.03.09) - Animations improvement using ROM tables: lines count 622->342, compiled total size 6031->4867 bytes (20% reduction).
+v1.3 (2022.03.09) - Animations improvement using ROM tables: lines count 622->342, compiled total size 6031->4867 bytes (20% reduction).  
 v1.4 (2022.03.10) - Dice number improvement using masked bits: lines count 342->296, compiled total size 4867->4777 bytes (2% reduction).
 
 &nbsp;
