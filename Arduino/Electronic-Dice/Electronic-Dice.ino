@@ -8,12 +8,12 @@
   Version 1.1, 2022.02.24 - Adding ON/OFF animations switch.
                             Fixed bug with random secuences (randomSeed).
   Version 1.2, 2022.02.27 - Re-arrange LEDs pin-out to simplify PCB.
-  Version 1.3, 2022.03.10 - Improvement of animations code with ROM tables.
-                            lines count 622 -> 342, compiled total size 6031 -> 4867 bytes (20% reduction)
+  Version 1.3, 2022.03.10 - Animations improvement using ROM tables: lines count 622->342, compiled total size 6031->4867 bytes (20% reduction).
 
   This source code is licensed under GPL v3.0  
 
   Pinout:
+  
       *(A)        *(B)
 
       *(C)  *(D)  *(E)
