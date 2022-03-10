@@ -78,7 +78,7 @@ Pinout:
 |------------------------------------|------------------------------------|
 | ![](Resources/13-Building-08.jpg)  | ![](Resources/14-Building-09.jpg)  |
 
-| Proyect Final                      | Proyect Final (YouTube video)      |
+| Project Final                      | Project Final (YouTube video)      |
 |------------------------------------|------------------------------------|
 | ![](Resources/16-Building-11.jpg)  | [![](Resources/17-Proyect-Final.jpg)](https://youtu.be/CFKjGjXlMMI) |
 
