@@ -82,7 +82,7 @@ Pinout:
 |------------------------------------|------------------------------------|
 | ![](Resources/16-Building-11.jpg)  | [![](Resources/17-Proyect-Final.jpg)](https://youtu.be/CFKjGjXlMMI) |
 
-See 'Rescources' sub-folder for more pictures of the proyect.
+See 'Rescources' sub-folder for more pictures & videos of the project.
 
 &nbsp;
 
@@ -97,4 +97,4 @@ v1.4 (2022.03.10) - Dice number improvement using masked bits: lines count 342->
 &nbsp;
 
 This source code is licensed under GPL v3.0  
-Please send me your feedback about this app: andres.garcia.alves@gmail.com
+Please send me your feedback about this project: andres.garcia.alves@gmail.com
