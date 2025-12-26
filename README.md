@@ -91,7 +91,7 @@ See 'Rescources' sub-folder for more pictures & videos of the project.
 v1.0 (2022.02.23) - Initial release.  
 v1.1 (2022.02.24) - Adding ON/OFF animations switch. Fixed bug with random secuences (randomSeed).  
 v1.2 (2022.02.27) - Re-arrange LEDs pin-out to simplify PCB.  
-v1.3 (2022.03.09) - Animations improvement with ROM tables: line count 622 -> 342 (20% reduction on compiled size).  
+v1.3 (2022.03.09) - Animations improvement with ROM tables: line count 622->342 (compiled size reduced by 20%).  
 v1.4 (2022.03.10) - Dice number improvement with masked bits: line count 342 -> 296.  
 v1.5 (2025.12.26) - Adding KiCAD 9 schematics and PCB diagrams.
 
