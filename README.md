@@ -62,10 +62,6 @@ Pinout:
 
 ### Screenshots
 
-| Wiring Diagram (Part A)                  | Wiring Diagram (Part B)                  |
-|------------------------------------------|------------------------------------------|
-| ![](Resources/01-Wiring-Diagram-01.jpg)  | ![](Resources/01-Wiring-Diagram-02.jpg)  |
-
 | Schematics                               | PCB Layout                               |
 |------------------------------------------|------------------------------------------|
 | ![](Resources/02-Schematic-Diagram.png)  | ![](Resources/03-PCB-Layout.png)         |
