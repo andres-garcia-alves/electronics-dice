@@ -62,25 +62,33 @@ Pinout:
 
 ### Screenshots
 
-| Schematic (Part A)                 | Schematic (Part B)                 |
-|------------------------------------|------------------------------------|
-| ![](Resources/01-Diagrams-01.jpg)  | ![](Resources/02-Diagrams-02.jpg)  |
+| Wiring Diagram (Part A)                  | Wiring Diagram (Part B)                  |
+|------------------------------------------|------------------------------------------|
+| ![](Resources/01-Wiring-Diagram-01.jpg)  | ![](Resources/01-Wiring-Diagram-02.jpg)  |
 
-| Prototype                          |  Prototype                         |
-|------------------------------------|------------------------------------|
-| ![](Resources/04-Prototype-01.jpg) | ![](Resources/05-Prototype-02.jpg) |
+| Schematics                               | PCB Layout                               |
+|------------------------------------------|------------------------------------------|
+| ![](Resources/02-Schematic-Diagram.png)  | ![](Resources/03-PCB-Layout.png)         |
 
-| Building                           |  Building                          |
-|------------------------------------|------------------------------------|
-| ![](Resources/06-Building-01.jpg)  | ![](Resources/09-Building-04.jpg)  |
+| PCB 3D Render                            | PCB 3D Render                            |
+|------------------------------------------|------------------------------------------|
+| ![](Resources/04-PCB-3D-Render-01.png)   | ![](Resources/04-PCB-3D-Render-02.png)   |
 
-| Building                           |  Building                          |
-|------------------------------------|------------------------------------|
-| ![](Resources/13-Building-08.jpg)  | ![](Resources/14-Building-09.jpg)  |
+| Prototype                                |  Prototype                               |
+|------------------------------------------|------------------------------------------|
+| ![](Resources/06-Prototype-01.jpg)       | ![](Resources/06-Prototype-02.jpg)       |
 
-| Project Final                      | Project Final (YouTube video)      |
-|------------------------------------|------------------------------------|
-| ![](Resources/16-Building-11.jpg)  | [![](Resources/17-Proyect-Final.jpg)](https://youtu.be/CFKjGjXlMMI) |
+| Building                                 |  Building                                |
+|------------------------------------------|------------------------------------------|
+| ![](Resources/07-Building-01.jpg)        | ![](Resources/07-Building-04.jpg)        |
+
+| Building                                 |  Building                                |
+|------------------------------------------|------------------------------------------|
+| ![](Resources/07-Building-08.jpg)        | ![](Resources/07-Building-09.jpg)        |
+
+| Project Final                            | Project Final (YouTube video)            |
+|------------------------------------------|------------------------------------------|
+| ![](Resources/07-Building-11.jpg)        | [![](Resources/08-Proyect-Final.jpg)](https://youtu.be/CFKjGjXlMMI) |
 
 See 'Rescources' sub-folder for more pictures & videos of the project.
 

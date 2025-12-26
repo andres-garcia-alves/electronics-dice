@@ -5705,7 +5705,7 @@
 			(net 20 "Net-(J4-Pin_9)")
 			(pinfunction "1")
 			(pintype "passive")
-			(uuid "2ec54ec8-b835-4fbc-8bb5-2b8c14ebc15f")
+			(uuid "2be94695-239f-4894-8e2d-39c02bb71bbc")
 		)
 		(pad "2" thru_hole circle
 			(at 0 4.5 180)
@@ -5727,7 +5727,7 @@
 			(net 49 "GND2")
 			(pinfunction "2")
 			(pintype "passive")
-			(uuid "513e7019-5df2-45f4-9302-fc9ddee4e185")
+			(uuid "66339c76-4534-4bab-b012-8392061763e7")
 		)
 		(embedded_fonts no)
 		(model "${KICAD9_3DMODEL_DIR}/Button_Switch_THT.3dshapes/SW_PUSH_6mm_H9.5mm.step"
@@ -6906,8 +6906,8 @@
 		)
 	)
 	(gr_line
-		(start 222.25 73.19)
-		(end 222.25 112.56)
+		(start 220.98 73.19)
+		(end 220.98 112.56)
 		(stroke
 			(width 0.05)
 			(type default)
