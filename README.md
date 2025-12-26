@@ -62,7 +62,7 @@ Pinout:
 
 ### Screenshots
 
-| Diagram A                          | Diagram B                          |
+| Schematic (Part A)                 | Schematic (Part B)                 |
 |------------------------------------|------------------------------------|
 | ![](Resources/01-Diagrams-01.jpg)  | ![](Resources/02-Diagrams-02.jpg)  |
 
@@ -91,8 +91,9 @@ See 'Rescources' sub-folder for more pictures & videos of the project.
 v1.0 (2022.02.23) - Initial release.  
 v1.1 (2022.02.24) - Adding ON/OFF animations switch. Fixed bug with random secuences (randomSeed).  
 v1.2 (2022.02.27) - Re-arrange LEDs pin-out to simplify PCB.  
-v1.3 (2022.03.09) - Animations improvement using ROM tables: lines count 622->342, compiled total size 6031->4867 bytes (20% reduction).  
-v1.4 (2022.03.10) - Dice number improvement using masked bits: lines count 342->296, compiled total size 4867->4777 bytes (2% reduction).
+v1.3 (2022.03.09) - Animations improvement with ROM tables: line count 622->342, compiled size 6031->4867 bytes (20% reduction).  
+v1.4 (2022.03.10) - Dice number improvement with masked bits: line count 342->296, compiled size 4867->4777 bytes (2% reduction).  
+v1.5 (2025.12.26) - Adding KiCAD 9 schematics and PCB diagrams.
 
 &nbsp;
 
